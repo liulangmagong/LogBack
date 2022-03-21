@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+scan：当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。
+scanPeriod：设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒当scan为true时，此属性生效。默认的时间间隔为1分钟。
+debug：当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。
+-->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- 定义日志的根目录 -->
+    <property name="logPath" value="./logs"/>
+    <property name="logFilePrefix" value="strategy"/>
+    <!-- 定义日志文件名称 -->
+<!--    <property name="appName" value="[自己定义名字]"></property>-->
+    <!--
+         * 记录器是Logback中最重要的部分
+         * 日志的记录器会将日志的输出任务交给日志的附加器来输出
+         * 控制台附加器会将日志输出到控制台
+         * 文件附加器会将日志输出到文件
+         * 不同的附加器使用的时候使用的是不同的实现类
+             * ch.qos.logback.core.ConsoleAppender 控制台附加器的实现类
+             * ch.qos.logback.core.FileAppender 文件附加器的实现类
+             * ch.qos.logback.core.rolling.RollingFileAppender 滚动文件附加器 使用较多
+                * 可以实现根据时间，如每天，月等生成一个文件或者每小时生成一个文件
+                * 也可以根据文件大小，如每50M生成一个文件
+                * 实现日志文件的归档管理
+         * 附加器里边需要配置一个编码器，来配置输出日志的格式
+         日志输出格式：
+            %d表示日期时间，
+            %thread表示线程名， ->%t
+            %-5level：级别从左显示5个字符宽度
+            %logger{50} 表示logger名字最长50个字符，否则按照句点分割。
+            %msg：日志消息，即代码中 log.**()里边的内容信息。 -> %m
+            %n是换行符
+            %class: 所在的类  -> %c
+            %line: 所在的行
+            %后边的数字表示的是该显示内容显示长度，不足时会用空格补充，过长会自动缩短
+            %不加 - 是从前边补空格，加了 - 是从后边补空格
+    -->
+    <!-- 定义一个控制台附加器：STDOUT就是给附加器起的名字 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%-5p [%d][%X{traceId}][%X{userId}][%t][%c] - %m%n</pattern>
+        </encoder>
+    </appender>
+    <!--定义一个文件附加器：-->
+<!--    <appender name="FILE" class="ch.qos.logback.core.FileAppender">-->
+<!--        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">-->
+<!--            <pattern>%-5p [%d][%X{traceId}][%X{userId}][%t][%c] - %m%n</pattern>-->
+<!--        </encoder>-->
+<!--        <file>myLog.log</file>-->
+<!--        &lt;!&ndash;-->
+<!--        是否追加输出，如果true表示每次输出都在上一次输出结果后边继续输出，反之覆盖之前输出的内容-->
+<!--        注意：追不追加都是输出的同一个文件里边。-->
+<!--        如果使用这样的文件附加器输出，如果输出的内容过多的话会出现文件太大的情况-->
+<!--        文件过大的话，后期检索日志文件会非常的困难-->
+<!--        &ndash;&gt;-->
+<!--        <append>false</append>-->
+<!--    </appender>-->
+
+    <!--定义一个滚动文件附加器-->
+    <appender name="ROLLING-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%-5p [%d][%X{traceId}][%X{userId}][%t][%c] - %m%n</pattern>
+        </encoder>
+        <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 -->
+        <file>${logPath}/${logFilePrefix}.info.log</file>
+        <!--
+        设置滚动策略：可以设置新生成的文件的文件名，以及什么时候生成新的日志文件
+        目前logback提供了两种比较常用的滚动策略
+            基于时间的滚动策略
+            ch.qos.logback.core.rolling.TimeBasedRollingPolicy
+            基于大小和时间的滚动策略
+            ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy
+        -->
+        <!--基于时间的滚动策略-->
+<!--        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            &lt;!&ndash;配置新生成文件的命名模式  在哪里添加 / 就可以进行划分文件夹&ndash;&gt;-->
+<!--            <fileNamePattern>${logPath}/${logFilePrefix}.info.%d{yyyy/MM-dd HH-mm-ss}.log</fileNamePattern>-->
+<!--            &lt;!&ndash;配置最大归档文件的数量，超过这个数量会讲旧的文件删除&ndash;&gt;-->
+<!--            <maxHistory>3</maxHistory>-->
+<!--            &lt;!&ndash;配置所有日志文件的总大小，超过后也会删除旧的日志文件 &ndash;&gt;-->
+<!--            <totalSizeCap>5GB</totalSizeCap>-->
+<!--        </rollingPolicy>-->
+        <!--
+        基于大小和时间的滚动策略 只是多了一个最大文件大小的属性 maxFileSize
+        这里有一个 %i 只有设置了maxFileSize属性的时候才会使用，是文件的序号
+        -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!--配置新生成文件的命名模式  在哪里添加 / 就可以进行划分文件夹-->
+            <fileNamePattern>${logPath}/${logFilePrefix}.info.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!--
+            配置最大归档文件的数量，超过这个数量会讲旧的文件删除
+            这里的值是和上边时间匹配的，如按天的时候，这里保存的就是三天的，超过三天会被替换；按照分钟的话就会超过三分钟会被替换
+            -->
+            <maxHistory>3</maxHistory>
+            <!--配置所有日志文件的总大小，超过后也会删除旧的日志文件 -->
+            <totalSizeCap>5GB</totalSizeCap>
+            <maxFileSize>1KB</maxFileSize>
+        </rollingPolicy>
+    </appender>
+
+    <!--自定义的appender-->
+<!--    <appender name="myAppender" class="com.examples.MyAppender">-->
+<!--        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">-->
+<!--            <pattern>%-5p [%d][%X{traceId}][%X{userId}][%t][%c] - %m%n</pattern>-->
+<!--        </encoder>-->
+        <!--过滤掉TRACE和DEBUG级别的日志  即级别大于等于INFO 继续向下询问-->
+<!--        <filter class ="ch.qos.logback.classic.filter.ThresholdFilter">-->
+<!--            <level>INFO</level>-->
+<!--        </filter>-->
+<!--        <filter class="ch.qos.logback.classic.filter.LevelFilter">-->
+<!--            &lt;!&ndash;配置level输出，反之不输出&ndash;&gt;-->
+<!--            <level>INFO</level>-->
+<!--            <onMatch>ACCEPT</onMatch>-->
+<!--            <onMismatch>DENY</onMismatch>-->
+<!--        </filter>-->
+
+        <!--自定义的级别过滤器-->
+        <!--匹配即输出 为这个level配置设置一个对应的属性在过滤器中-->
+<!--        <filter class="com.examples.MyFilter">-->
+<!--            <level>INFO</level>-->
+<!--        </filter>-->
+
+        <!--自定义的过滤器-->
+        <!--匹配到keyword即输出-->
+        <!--这里注意一定要配置正确的class-->
+<!--        <filter class="com.examples.MyFilterByKeyword">-->
+<!--            <keyword>Hello</keyword>-->
+<!--        </filter>-->
+
+        <!--添加文件附加器的内容 -->
+        <!--这里的文件名称可以自己自定义，叫什么都可以,同样这个属性也要加入到实现类中-->
+<!--        <fileName>myLog.log</fileName>-->
+<!--    </appender>-->
+
+
+
+    <!--根记录器只有一个属性就是级别属性-->
+    <root level="INFO">
+        <!--将附加器添加到日志记录器中-->
+        <appender-ref ref="STDOUT"/>
+<!--        <appender-ref ref="FILE"/>-->
+<!--        <appender-ref ref="ROLLING-FILE"/>-->
+<!--        <appender-ref ref="myAppender"/>-->
+    </root>
+    <logger name="com.aa" level="DEBUG"/>
+</configuration>
